@@ -1,0 +1,17 @@
+build/
+dist/
+obj/
+vhs
+tests/tape_test
+*.o
+*.gif
+*.mp4
+*.webm
+*.hpkg
+haiku-session.txt
+png-demo.txt
+png-demo.png
+png-midpoint.png
+png-demo-frames/
+animation-demo.txt
+update-git.sh

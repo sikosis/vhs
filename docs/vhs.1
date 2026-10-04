@@ -1,0 +1,89 @@
+.TH VHS 1 "October 2026" "vhs v0.5" "VHS for Haiku"
+.SH NAME
+vhs \- write terminal recordings as code on Haiku
+.SH SYNOPSIS
+.B vhs
+.I tape.tape
+.br
+.B vhs new
+.RI [ file ]
+.br
+.B vhs check
+.IR file | -
+.br
+.B vhs record
+.br
+.B vhs manual
+.SH DESCRIPTION
+VHS executes a tape script in a pseudo-terminal, maintains an in-process
+VT/ANSI screen, and renders terminal sessions through Haiku's native Interface
+and Translation Kits. It writes text transcripts, PNG stills and frame
+sequences, and uses FFmpeg for GIF, MP4 and WebM output.
+.SH COMMANDS
+.TP
+.B new [file]
+Create a starter tape without overwriting an existing file.
+.TP
+.B check file
+Validate tape syntax without executing it. A dash reads standard input.
+.TP
+.B record
+Record an interactive child shell as tape commands on standard output.
+.TP
+.B manual
+Show the tape command summary.
+.TP
+.B version
+Show the installed version.
+.SH TAPE COMMANDS
+.TP
+.B Output path
+Add a .txt, .ascii, .png, .gif, .mp4, .webm or PNG-frame-directory output.
+.TP
+.B Set name value
+Configure shell, terminal dimensions, font, theme, timing and presentation.
+.TP
+.B Type[@time] "text"
+Type text in the child terminal. Backtick strings preserve shell backslashes.
+.TP
+.B Enter, Tab, Escape, Backspace, Delete, Insert, Up, Down, Left, Right
+Send a key, with optional timing and repeat count.
+.TP
+.B Ctrl[+Alt][+Shift]+key
+Send a modified key.
+.TP
+.B Sleep time
+Advance the recording after a delay.
+.TP
+.B Wait[+Screen|+Line][@timeout] /expression/
+Wait for terminal content to match a regular expression.
+.TP
+.B Hide, Show
+Pause and resume transcript and frame capture.
+.TP
+.B Screenshot [path]
+Write the current terminal frame as PNG.
+.TP
+.B Source path
+Include another tape relative to the current tape.
+.TP
+.B Require program
+Fail before execution when a required program is unavailable.
+.TP
+.B Env name value
+Set an environment value in the child shell.
+.TP
+.B Copy "text", Paste
+Write and read the Haiku system clipboard.
+.SH DEPENDENCIES
+The executable uses Haiku system libraries. FFmpeg must be installed for GIF,
+MP4 and WebM output.
+.SH FILES
+Tape files conventionally use the .tape extension. See the installed VHS
+documentation directory for examples and the compatibility roadmap.
+.SH EXIT STATUS
+Zero indicates success. One indicates invalid input or an execution failure.
+Two indicates command-line usage failure.
+.SH SEE ALSO
+.BR ffmpeg (1),
+.BR bash (1)

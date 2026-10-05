@@ -627,6 +627,7 @@ bool programmeFromCommands(const std::vector<Command>& commands, Programme& prog
     std::ostream& error)
 {
     programme.commands = commands;
+    bool windowBarSizeSet = false;
     for (const Command& command : commands) {
         if (command.kind == CommandKind::Output) {
             const std::string path = unquotePath(command.argument);
@@ -677,10 +678,13 @@ bool programmeFromCommands(const std::vector<Command>& commands, Programme& prog
             else if (command.option == "MarginFill") programme.render.marginFill = command.argument;
             else if (command.option == "WindowBar") {
                 programme.render.windowBar = command.argument;
-                if (programme.render.windowBarSize == 0)
-                    programme.render.windowBarSize = 36;
+                if (!windowBarSizeSet)
+                    programme.render.windowBarSize = command.argument == "Haiku" ? 30 : 36;
             }
-            else if (command.option == "WindowBarSize") programme.render.windowBarSize = std::stoi(command.argument);
+            else if (command.option == "WindowBarSize") {
+                programme.render.windowBarSize = std::stoi(command.argument);
+                windowBarSizeSet = true;
+            }
             else if (command.option == "Framerate") programme.video.framerate = std::stoi(command.argument);
             else if (command.option == "PlaybackSpeed") programme.video.playbackSpeed = std::stod(command.argument);
             else if (command.option == "LoopOffset") programme.video.loopOffset = command.argument;

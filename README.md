@@ -8,9 +8,9 @@ frames, and plain-text test output without requiring a browser or `ttyd`.
 The project keeps the familiar `vhs` command and tape vocabulary so existing
 tapes can be reused wherever Haiku can run the commands they contain.
 
-## Current status: v0.5 release candidate
+## Current status: v0.51
 
-The complete v0.5 release candidate is ready for clean-system Haiku testing:
+The v0.51 update is ready for Haiku testing:
 
 - dependency-free C++17 Make and CMake builds;
 - `vhs new [file]` starter-tape generation;
@@ -25,6 +25,8 @@ The complete v0.5 release candidate is ready for clean-system Haiku testing:
 - an in-process VT/ANSI screen with cursor movement, erasing, scrolling,
   alternate-screen setup, UTF-8, and 16/256/true-colour SGR attributes;
 - native Haiku bitmap drawing with installed monospace fonts and PNG translation;
+- a Haiku Terminal-style yellow title tab by default, with `Colorful` and
+  `None` window bar options;
 - final PNG outputs, explicit `Screenshot` files, and command-by-command PNG
   frame directories;
 - timing-aware GIF, MP4, and WebM encoding through FFmpeg;
@@ -86,9 +88,11 @@ open png-demo.png
 open png-midpoint.png
 ```
 
-The final image should show coloured text and UTF-8 glyphs in a rounded,
-Haiku-rendered terminal frame. `png-demo-frames/` contains a PNG after each tape
-action so cursor and screen changes can be inspected.
+The final image should show coloured text and UTF-8 glyphs beneath a yellow
+Haiku-style title tab. `png-demo-frames/` contains a PNG after each tape action
+so cursor and screen changes can be inspected. `Set WindowBar Colorful` selects
+the three-circle bar shown in the animated example; `Set WindowBar None` hides
+the bar.
 
 For the animated-output acceptance run:
 

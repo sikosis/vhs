@@ -94,6 +94,11 @@ compatibility. Existing tapes should work when their commands and fonts exist on
 Haiku. Differences caused by Haiku font metrics, clipboard APIs, shell paths, or
 FFmpeg codecs will be documented rather than hidden.
 
+From v0.51, tapes without `Set WindowBar` render a Haiku Terminal-style yellow
+title tab. `Set WindowBar Colorful` retains the three coloured buttons, and
+`Set WindowBar None` suppresses the bar. This changes only presentation; tape
+commands and output formats remain compatible.
+
 The upstream SSH server and hosted `vhs publish` service are outside the initial
 desktop release. They do not affect local tape execution or rendering and can be
 considered after the Haiku package is stable.

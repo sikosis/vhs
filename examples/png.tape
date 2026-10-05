@@ -13,7 +13,6 @@ Set FontFamily "Noto Sans Mono"
 Set Padding 28
 Set Margin 24
 Set MarginFill "#24273a"
-Set WindowBar Colorful
 Set BorderRadius 12
 Set TypingSpeed 15ms
 Set WaitTimeout 5s

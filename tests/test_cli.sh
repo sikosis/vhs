@@ -10,7 +10,7 @@ work_dir="${TMPDIR:-/tmp}/vhs-cli-test-$$"
 mkdir -p "$work_dir"
 trap 'rm -rf "$work_dir"' EXIT HUP INT TERM
 
-"$VHS" --version | grep '^vhs v0.5$'
+"$VHS" --version | grep '^vhs v0.51$'
 "$VHS" new "$work_dir/demo.tape"
 "$VHS" check "$work_dir/demo.tape" | grep 'valid tape'
 

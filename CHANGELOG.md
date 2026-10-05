@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.51
+
+- Made Haiku Terminal's yellow title tab the default window bar in rendered
+  frames. `Set WindowBar Colorful` retains the three coloured buttons; use
+  `Set WindowBar None` for no bar.
+
 ## v0.5 — release candidate
 
 - Added the compatible tape parser, syntax checking, starter tapes, and manual.

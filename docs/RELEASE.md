@@ -1,7 +1,7 @@
 # Release checklist
 
-VHS v0.5 is a release candidate. Publishing remains a separate approval after
-every item below succeeds on Haiku x86_64.
+VHS v0.51 is ready for Haiku acceptance. Publishing remains a separate approval
+after every item below succeeds on Haiku x86_64.
 
 ## Candidate validation
 
@@ -33,14 +33,14 @@ After clean-install approval:
 
 1. Initialise or attach the intended Git repository and review every tracked
    file; generated videos, frames, binaries and credentials must be absent.
-2. Commit the v0.5 release candidate.
+2. Commit the tested v0.51 source.
 3. Create the GitHub repository at the approved owner/name and push `main`.
-4. Create and push immutable tag `v0.5`.
+4. Create and push immutable tag `v0.51`.
 5. Finalise the HaikuPorts recipe checksum from that tag archive.
-6. Create a GitHub release titled `VHS for Haiku v0.5` using `CHANGELOG.md`.
+6. Create a GitHub release titled `VHS for Haiku v0.51` using `CHANGELOG.md`.
 7. Attach the x86_64 HPKG and its SHA-256 checksum.
 8. Verify the release by downloading the published HPKG and repeating the
    clean-install smoke test.
 
-Never move or replace `v0.5`. Any correction after publication uses a new
+Never move or replace `v0.51`. Any correction after publication uses a new
 version.

@@ -1,8 +1,9 @@
 build/
 dist/
 obj/
-vhs
+/vhs
 tests/tape_test
+tests/terminal_screen_test
 *.o
 *.gif
 *.mp4

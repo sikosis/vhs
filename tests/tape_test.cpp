@@ -47,6 +47,13 @@ Source common.tape
     expect(spacedSleep.ok(), "spaced Sleep duration should parse");
     expect(spacedSleep.commands.front().argument == "500ms", "Sleep duration should be normalised");
 
+    const vhs::ParseResult windowBars = vhs::parseTape(
+        "Set WindowBar Haiku\n"
+        "Set WindowBar Colorful\n"
+        "Set WindowBar None\n");
+    expect(windowBars.ok(), "Haiku, Colorful, and None window bars should parse");
+    expect(windowBars.commands.size() == 3, "window bar settings should be retained");
+
     const vhs::ParseResult invalid = vhs::parseTape(
         "Set FontSize nope\n"
         "Type missing-quotes\n"

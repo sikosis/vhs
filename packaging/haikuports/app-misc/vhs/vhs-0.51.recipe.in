@@ -1,0 +1,54 @@
+SUMMARY="Terminal GIF and video recorder driven by tape scripts"
+DESCRIPTION="VHS for Haiku executes declarative tape scripts in a pseudo-terminal, \
+maintains a native VT/ANSI screen and renders terminal demonstrations as text, \
+PNG, GIF, MP4 and WebM. It also records interactive sessions back into tapes. \
+PNG rendering uses Haiku system kits and animated formats use FFmpeg."
+HOMEPAGE="https://github.com/sikosis/vhs"
+COPYRIGHT="2026 VHS for Haiku contributors"
+LICENSE="MIT"
+REVISION="1"
+SOURCE_URI="https://github.com/sikosis/vhs/archive/refs/tags/v$portVersion.tar.gz"
+CHECKSUM_SHA256="@CHECKSUM_SHA256@"
+SOURCE_FILENAME="vhs-$portVersion.tar.gz"
+
+ARCHITECTURES="?x86_64"
+
+PROVIDES="
+	vhs$secondaryArchSuffix = $portVersion
+	cmd:vhs = $portVersion
+	"
+REQUIRES="
+	haiku$secondaryArchSuffix
+	cmd:bash
+	cmd:ffmpeg
+	"
+
+BUILD_REQUIRES="
+	haiku${secondaryArchSuffix}_devel
+	"
+BUILD_PREREQUIRES="
+	cmd:cmake
+	cmd:g++$secondaryArchSuffix
+	cmd:ninja
+	cmd:sh
+	"
+
+defineDebugInfoPackage vhs$secondaryArchSuffix \
+	"$binDir"/vhs
+
+BUILD()
+{
+	cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		$cmakeDirArgs
+	ninja -v -C build $jobArgs
+}
+
+INSTALL()
+{
+	ninja -C build install
+}
+
+TEST()
+{
+	ctest --test-dir build --output-on-failure
+}

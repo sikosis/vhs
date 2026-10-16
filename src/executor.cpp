@@ -872,10 +872,14 @@ int executeTapeFile(const std::string& path, std::ostream& output, std::ostream&
     for (const std::string& path : createdPngs)
         output << "Created " << path << "\n";
     std::vector<std::string> createdAnimated;
-    if ((!programme.frameDirectories.empty() || !programme.videoOutputs.empty())
-        && !renderOutputs(frames, programme.render, programme.video,
-            programme.frameDirectories, programme.videoOutputs, createdAnimated, error))
-        return 1;
+    if (!programme.frameDirectories.empty() || !programme.videoOutputs.empty()) {
+        output << "Rendering " << frames.size() << " frame"
+               << (frames.size() == 1 ? "" : "s") << "...\n";
+        output.flush();
+        if (!renderOutputs(frames, programme.render, programme.video,
+                programme.frameDirectories, programme.videoOutputs, createdAnimated, error))
+            return 1;
+    }
     for (const std::string& path : createdAnimated)
         output << "Created " << path << "\n";
     return 0;

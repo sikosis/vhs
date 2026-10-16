@@ -15,8 +15,6 @@ Set Theme "Dracula"
 Set Padding 28
 Set Margin 24
 Set MarginFill "#44475a"
-Set WindowBar Colorful
-Set BorderRadius 12
 Set Framerate 24
 Set PlaybackSpeed 1.25
 Set LoopOffset 10%

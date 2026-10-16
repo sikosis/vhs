@@ -58,6 +58,13 @@ bool ensureDirectory(const std::string& path, std::ostream& error)
 
 bool run(const std::vector<std::string>& arguments, std::ostream& error)
 {
+    int diagnostics[2];
+    if (pipe(diagnostics) != 0) {
+        error << "vhs: cannot capture FFmpeg diagnostics: "
+              << std::strerror(errno) << "\n";
+        return false;
+    }
+
     std::vector<char*> values;
     values.reserve(arguments.size() + 1);
     for (const std::string& argument : arguments)
@@ -66,18 +73,52 @@ bool run(const std::vector<std::string>& arguments, std::ostream& error)
 
     const pid_t child = fork();
     if (child < 0) {
+        close(diagnostics[0]);
+        close(diagnostics[1]);
         error << "vhs: cannot start FFmpeg: " << std::strerror(errno) << "\n";
         return false;
     }
     if (child == 0) {
+        close(diagnostics[0]);
+        dup2(diagnostics[1], STDERR_FILENO);
+        close(diagnostics[1]);
         execvp(values[0], values.data());
         _exit(127);
     }
+
+    close(diagnostics[1]);
+    std::string diagnostic;
+    char buffer[4096];
+    while (true) {
+        const ssize_t count = read(diagnostics[0], buffer, sizeof(buffer));
+        if (count > 0) {
+            if (diagnostic.size() < 65536) {
+                const std::size_t remaining = 65536 - diagnostic.size();
+                diagnostic.append(buffer, std::min<std::size_t>(
+                    static_cast<std::size_t>(count), remaining));
+            }
+            continue;
+        }
+        if (count < 0 && errno == EINTR)
+            continue;
+        break;
+    }
+    close(diagnostics[0]);
+
     int status = 0;
     while (waitpid(child, &status, 0) < 0 && errno == EINTR) {
     }
     if (!WIFEXITED(status) || WEXITSTATUS(status) != 0) {
-        error << "vhs: FFmpeg failed for " << arguments.back() << "\n";
+        error << "vhs: FFmpeg failed for " << arguments.back();
+        if (WIFEXITED(status))
+            error << " (exit status " << WEXITSTATUS(status) << ')';
+        else if (WIFSIGNALED(status))
+            error << " (signal " << WTERMSIG(status) << ')';
+        error << "\n";
+        if (diagnostic.empty() && WIFEXITED(status) && WEXITSTATUS(status) == 127)
+            error << "vhs: could not execute ffmpeg\n";
+        else if (!diagnostic.empty())
+            error << diagnostic << (diagnostic.back() == '\n' ? "" : "\n");
         return false;
     }
     return true;
@@ -166,19 +207,35 @@ bool renderOutputs(std::vector<TerminalScreen> frames, const RenderOptions& rend
         std::ostringstream timing;
         timing << "setpts=PTS/" << video.playbackSpeed;
         if (output.size() >= 4 && output.substr(output.size() - 4) == ".gif") {
+            const std::vector<std::string> fallbackBase = arguments;
             arguments.insert(arguments.end(), {"-filter_complex",
                 timing.str() + ",split[a][b];[a]palettegen[p];[b][p]paletteuse",
                 "-loop", "0", output});
+            std::ostringstream paletteError;
+            if (!run(arguments, paletteError)) {
+                std::vector<std::string> fallback = fallbackBase;
+                fallback.insert(fallback.end(), {"-vf", timing.str(),
+                    "-loop", "0", output});
+                std::ostringstream fallbackError;
+                if (!run(fallback, fallbackError)) {
+                    error << paletteError.str()
+                          << "vhs: standard GIF fallback also failed\n"
+                          << fallbackError.str();
+                    return false;
+                }
+            }
         } else if (output.size() >= 4 && output.substr(output.size() - 4) == ".mp4") {
             arguments.insert(arguments.end(), {"-vf", timing.str(), "-r",
                 std::to_string(video.framerate), "-pix_fmt", "yuv420p", output});
+            if (!run(arguments, error))
+                return false;
         } else {
             arguments.insert(arguments.end(), {"-vf", timing.str(), "-r",
                 std::to_string(video.framerate), "-c:v", "libvpx-vp9",
                 "-pix_fmt", "yuv420p", output});
+            if (!run(arguments, error))
+                return false;
         }
-        if (!run(arguments, error))
-            return false;
         created.push_back(output);
     }
 

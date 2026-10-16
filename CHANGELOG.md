@@ -5,6 +5,10 @@
 - Made Haiku Terminal's yellow title tab the default window bar in rendered
   frames. `Set WindowBar Colorful` retains the three coloured buttons; use
   `Set WindowBar None` for no bar.
+- Updated the bundled PNG and animation examples to use square Haiku window
+  corners.
+- Added visible frame-rendering progress, detailed FFmpeg diagnostics, and a
+  standard GIF encoder fallback for older FFmpeg packages.
 
 ## v0.5 — release candidate
 

@@ -90,9 +90,10 @@ open png-midpoint.png
 
 The final image should show coloured text and UTF-8 glyphs beneath a yellow
 Haiku-style title tab. `png-demo-frames/` contains a PNG after each tape action
-so cursor and screen changes can be inspected. `Set WindowBar Colorful` selects
-the three-circle bar shown in the animated example; `Set WindowBar None` hides
-the bar.
+so cursor and screen changes can be inspected. Omit `Set WindowBar`, or use
+`Set WindowBar Haiku`, for the square Haiku presentation. `Set WindowBar
+Colorful` selects the optional three-circle bar; `Set WindowBar None` hides the
+bar.
 
 For the animated-output acceptance run:
 

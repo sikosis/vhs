@@ -9,6 +9,8 @@
   corners.
 - Added visible frame-rendering progress, detailed FFmpeg diagnostics, and a
   standard GIF encoder fallback for older FFmpeg packages.
+- Added Hum-style interactive progress feedback while loading, running, writing,
+  and rendering tapes.
 
 ## v0.5 — release candidate
 

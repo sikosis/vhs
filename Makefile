@@ -1,8 +1,9 @@
 CXX ?= c++
 VERSION := $(strip $(shell cat VERSION))
 CPPFLAGS ?= -Iinclude -D_XOPEN_SOURCE=600 -DVHS_VERSION=\"$(VERSION)\"
-CXXFLAGS ?= -O2 -std=c++17 -Wall -Wextra -Wpedantic
+CXXFLAGS ?= -O2 -std=c++17 -Wall -Wextra -Wpedantic -pthread
 LDFLAGS ?=
+LDLIBS += -pthread
 
 SOURCES := src/main.cpp src/tape.cpp src/executor.cpp src/terminal.cpp src/renderer.cpp \
 	src/video.cpp

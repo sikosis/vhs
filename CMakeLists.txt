@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 project(vhs LANGUAGES CXX)
 
 include(GNUInstallDirs)
+find_package(Threads REQUIRED)
 
 file(READ "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" VHS_VERSION)
 string(STRIP "${VHS_VERSION}" VHS_VERSION)
@@ -14,6 +15,7 @@ add_library(vhs_core src/tape.cpp src/executor.cpp src/terminal.cpp src/renderer
 target_include_directories(vhs_core PUBLIC include)
 target_compile_definitions(vhs_core PRIVATE _XOPEN_SOURCE=600)
 target_compile_options(vhs_core PRIVATE -Wall -Wextra -Wpedantic)
+target_link_libraries(vhs_core PUBLIC Threads::Threads)
 if(HAIKU)
     target_link_libraries(vhs_core PUBLIC be translation)
 endif()

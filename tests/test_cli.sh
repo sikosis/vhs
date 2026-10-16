@@ -47,7 +47,11 @@ printf '%s\n' \
     'Env DEMO Haiku' \
     'Source commands.tape' > "$work_dir/session.tape"
 
-(cd "$work_dir" && "$VHS" session.tape)
+(cd "$work_dir" && "$VHS" session.tape >session-out 2>session-err)
+grep 'Loading tape session.tape...' "$work_dir/session-err"
+grep 'Running 16 tape commands...' "$work_dir/session-err"
+grep 'Writing tape outputs...' "$work_dir/session-err"
+grep 'Created result.txt' "$work_dir/session-out"
 grep 'visible:Haiku' "$work_dir/result.txt"
 grep 'done' "$work_dir/result.txt"
 if grep '^eecho ' "$work_dir/result.txt"; then

@@ -5,6 +5,7 @@
 #include "vhs/video.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cerrno>
 #include <cctype>
 #include <chrono>
@@ -14,13 +15,16 @@
 #include <fcntl.h>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <map>
+#include <mutex>
 #include <poll.h>
 #include <regex>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #ifdef __HAIKU__
@@ -71,6 +75,99 @@ public:
 private:
     struct sigaction oldInterrupt_ {};
     struct sigaction oldTerminate_ {};
+};
+
+class StatusDisplay {
+public:
+    explicit StatusDisplay(std::ostream& fallback)
+        : fallback_(fallback)
+        , interactive_(isatty(STDERR_FILENO) != 0
+            && fallback.rdbuf() == std::cerr.rdbuf())
+    {
+    }
+
+    ~StatusDisplay()
+    {
+        stop();
+    }
+
+    void start(const std::string& title)
+    {
+        title_ = title;
+        if (!interactive_) {
+            fallback_ << title_ << "\n";
+            return;
+        }
+        running_ = true;
+        worker_ = std::thread([this] { animate(); });
+    }
+
+    void update(const std::string& title)
+    {
+        if (!interactive_) {
+            fallback_ << title << "\n";
+            return;
+        }
+        std::lock_guard<std::mutex> lock(mutex_);
+        title_ = title;
+    }
+
+    void stop()
+    {
+        if (!interactive_ || !running_)
+            return;
+        running_ = false;
+        if (worker_.joinable())
+            worker_.join();
+        writeStatus("\r\x1b[2K");
+    }
+
+private:
+    void animate()
+    {
+        static const char* frames[] = {
+            "⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"
+        };
+        std::size_t frame = 0;
+        while (running_) {
+            std::string title;
+            {
+                std::lock_guard<std::mutex> lock(mutex_);
+                title = title_;
+            }
+            const bool colour = std::getenv("NO_COLOR") == nullptr;
+            const std::string indicator = colour
+                ? std::string("\x1b[38;5;212m") + frames[frame % 8] + "\x1b[0m"
+                : frames[frame % 8];
+            writeStatus("\r\x1b[2K" + indicator + " " + title);
+            ++frame;
+            std::this_thread::sleep_for(std::chrono::milliseconds(80));
+        }
+    }
+
+    static void writeStatus(const std::string& value)
+    {
+        const char* data = value.data();
+        std::size_t remaining = value.size();
+        while (remaining > 0) {
+            const ssize_t count = write(STDERR_FILENO, data, remaining);
+            if (count > 0) {
+                data += count;
+                remaining -= static_cast<std::size_t>(count);
+            } else if (count < 0 && errno == EINTR) {
+                continue;
+            } else {
+                break;
+            }
+        }
+    }
+
+    std::ostream& fallback_;
+    bool interactive_ = false;
+    std::atomic<bool> running_ {false};
+    std::mutex mutex_;
+    std::string title_;
+    std::thread worker_;
 };
 
 struct Programme {
@@ -844,43 +941,71 @@ bool executeProgramme(const Programme& programme, std::string& transcript,
 int executeTapeFile(const std::string& path, std::ostream& output, std::ostream& error)
 {
     SignalGuard signals;
+    StatusDisplay status(error);
+    status.start("Loading tape " + path + "...");
+
     std::vector<Command> commands;
     std::set<std::string> active;
-    if (!loadCommands(path, commands, active, error))
+    std::ostringstream stageError;
+    if (!loadCommands(path, commands, active, stageError)) {
+        status.stop();
+        error << stageError.str();
         return 1;
+    }
+
     Programme programme;
-    if (!programmeFromCommands(commands, programme, error))
+    if (!programmeFromCommands(commands, programme, stageError)) {
+        status.stop();
+        error << stageError.str();
         return 1;
+    }
+
+    status.update("Running " + std::to_string(commands.size()) + " tape commands...");
     std::string transcript;
     std::vector<std::string> createdPngs;
     std::vector<TerminalScreen> frames;
-    if (!executeProgramme(programme, transcript, createdPngs, frames, error))
+    if (!executeProgramme(programme, transcript, createdPngs, frames, stageError)) {
+        status.stop();
+        error << stageError.str();
         return 1;
+    }
+
+    status.update("Writing tape outputs...");
+    std::vector<std::string> createdFiles;
     for (const std::string& path : programme.textOutputs) {
         std::ofstream file(path);
         if (!file) {
+            status.stop();
             error << "vhs: cannot create output: " << path << "\n";
             return 1;
         }
         file << transcript;
         if (!file) {
+            status.stop();
             error << "vhs: cannot finish output: " << path << "\n";
             return 1;
         }
-        output << "Created " << path << "\n";
+        createdFiles.push_back(path);
     }
     for (const std::string& path : createdPngs)
-        output << "Created " << path << "\n";
+        createdFiles.push_back(path);
     std::vector<std::string> createdAnimated;
     if (!programme.frameDirectories.empty() || !programme.videoOutputs.empty()) {
-        output << "Rendering " << frames.size() << " frame"
-               << (frames.size() == 1 ? "" : "s") << "...\n";
-        output.flush();
+        status.update("Rendering " + std::to_string(frames.size()) + " frame"
+            + (frames.size() == 1 ? "..." : "s..."));
         if (!renderOutputs(frames, programme.render, programme.video,
-                programme.frameDirectories, programme.videoOutputs, createdAnimated, error))
+                programme.frameDirectories, programme.videoOutputs, createdAnimated,
+                stageError)) {
+            status.stop();
+            error << stageError.str();
             return 1;
+        }
     }
     for (const std::string& path : createdAnimated)
+        createdFiles.push_back(path);
+
+    status.stop();
+    for (const std::string& path : createdFiles)
         output << "Created " << path << "\n";
     return 0;
 }

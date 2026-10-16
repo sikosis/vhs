@@ -4,6 +4,8 @@
 #include "vhs/renderer.h"
 #include "vhs/terminal.h"
 
+#include <cstddef>
+#include <functional>
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -16,10 +18,12 @@ struct VideoOptions {
     std::string loopOffset = "0";
 };
 
+using VideoProgress = std::function<void(const std::string&, std::size_t, std::size_t)>;
+
 bool renderOutputs(std::vector<TerminalScreen> frames, const RenderOptions& render,
     const VideoOptions& video, const std::vector<std::string>& frameDirectories,
     const std::vector<std::string>& videoOutputs, std::vector<std::string>& created,
-    std::ostream& error);
+    std::ostream& error, const VideoProgress& progress = {});
 
 } // namespace vhs
 

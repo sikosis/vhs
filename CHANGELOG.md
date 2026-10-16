@@ -11,6 +11,8 @@
   standard GIF encoder fallback for older FFmpeg packages.
 - Added Hum-style interactive progress feedback while loading, running, writing,
   and rendering tapes.
+- Added live frame counts during rendering and a separate encoding status for
+  each animated output.
 
 ## v0.5 — release candidate
 

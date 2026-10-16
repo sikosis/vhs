@@ -149,7 +149,7 @@ void applyLoopOffset(std::vector<TerminalScreen>& frames, const std::string& val
 bool renderOutputs(std::vector<TerminalScreen> frames, const RenderOptions& render,
     const VideoOptions& video, const std::vector<std::string>& frameDirectories,
     const std::vector<std::string>& videoOutputs, std::vector<std::string>& created,
-    std::ostream& error)
+    std::ostream& error, const VideoProgress& progress)
 {
     if (frames.empty())
         frames.emplace_back();
@@ -173,6 +173,8 @@ bool renderOutputs(std::vector<TerminalScreen> frames, const RenderOptions& rend
     }
 
     for (std::size_t index = 0; index < frames.size(); ++index) {
+        if (progress)
+            progress("Rendering frame", index + 1, frames.size());
         if (!temporary.directory.empty()) {
             const std::string path = frameName(temporary.directory, index);
             std::string message;
@@ -200,6 +202,8 @@ bool renderOutputs(std::vector<TerminalScreen> frames, const RenderOptions& rend
     const std::string inputPattern = marker == std::string::npos ? input
         : input.substr(0, marker) + "%06d" + input.substr(marker + 6);
     for (const std::string& output : videoOutputs) {
+        if (progress)
+            progress("Encoding " + output, 0, 0);
         std::vector<std::string> arguments = {
             "ffmpeg", "-v", "error", "-y", "-framerate",
             std::to_string(video.framerate), "-i", inputPattern

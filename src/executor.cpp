@@ -112,6 +112,30 @@ public:
         title_ = title;
     }
 
+    void progress(const std::string& activity, std::size_t current,
+        std::size_t total)
+    {
+        if (total == 0) {
+            update(activity + "...");
+            return;
+        }
+        const std::string title = activity + " " + std::to_string(current)
+            + " of " + std::to_string(total) + "...";
+        if (interactive_) {
+            std::lock_guard<std::mutex> lock(mutex_);
+            title_ = title;
+            return;
+        }
+
+        const std::size_t percent = current * 100 / total;
+        if (activity != progressActivity_ || current == 1 || current == total
+            || percent >= lastProgressPercent_ + 10) {
+            fallback_ << title << "\n";
+            progressActivity_ = activity;
+            lastProgressPercent_ = percent;
+        }
+    }
+
     void stop()
     {
         if (!interactive_ || !running_)
@@ -167,6 +191,8 @@ private:
     std::atomic<bool> running_ {false};
     std::mutex mutex_;
     std::string title_;
+    std::string progressActivity_;
+    std::size_t lastProgressPercent_ = 0;
     std::thread worker_;
 };
 
@@ -995,7 +1021,10 @@ int executeTapeFile(const std::string& path, std::ostream& output, std::ostream&
             + (frames.size() == 1 ? "..." : "s..."));
         if (!renderOutputs(frames, programme.render, programme.video,
                 programme.frameDirectories, programme.videoOutputs, createdAnimated,
-                stageError)) {
+                stageError, [&status](const std::string& activity,
+                    std::size_t current, std::size_t total) {
+                    status.progress(activity, current, total);
+                })) {
             status.stop();
             error << stageError.str();
             return 1;
